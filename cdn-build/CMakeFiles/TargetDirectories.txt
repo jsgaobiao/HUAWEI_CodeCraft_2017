@@ -1,0 +1,3 @@
+/home/gaobiao/Documents/HUAWEI_CodeCraft_2017/cdn-build/CMakeFiles/edit_cache.dir
+/home/gaobiao/Documents/HUAWEI_CodeCraft_2017/cdn-build/CMakeFiles/rebuild_cache.dir
+/home/gaobiao/Documents/HUAWEI_CodeCraft_2017/cdn-build/CMakeFiles/cdn.dir

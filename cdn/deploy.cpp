@@ -20,6 +20,7 @@ int snode[maxn], tnode[maxn], tneed[maxn];
 char *ans_str;
 int ans_str_len, cur_ans_len;
 int server_price;
+int serverFlag[maxn];   // serverFlag[i] == True: build a server at node i
 
 void build_edge(int x, int y, int w, int c) {
 	edge[x].push_back(y);
@@ -77,8 +78,26 @@ void calc_max_flow(int* snode, int slen, int* tnode, int tlen) {
 		char end[10];
 		sprintf(end, "%d %d\n", _cons[route[route_len - 1]], route[0]);
 		add_to_answer(end);
-	}
+    }
 
+}
+
+void selectServer()
+{
+    memset(serverFlag, false, sizeof(serverFlag));
+    for (int i = 0; i < Consumer; i ++) {
+        int x_t = cons[i], len_t;
+        int flowCnt_t = 0, costMax_t = 0;
+        len_t = width[x_t].size();
+        for (int j = 0; j < len_t; j ++) {
+            flowCnt_t += width[x_t].at(j);
+            if (costMax_t < cost[x_t].at(j))
+                costMax_t = cost[x_t].at(j);
+        }
+        if (flowCnt_t < tneed[x_t] || tneed[x_t] * costMax_t > server_price) {
+            serverFlag[x_t] = true;
+        }
+    }
 }
 
 //你要完成的功能总入口
@@ -103,10 +122,17 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		tot_consumes += w;
 	}
 
-	for (int i = 0; i < Consumer; i++) {
-		tnode[i] = cons[i];
-		snode[i] = cons[i];
+    selectServer();
+    int serverCnt = 0;
+
+    for (int i = 0; i < Consumer; i++) {
+        tnode[i] = cons[i];
 	}
+
+    for (int i = 0; i < N; i ++)
+        if (serverFlag[i]) {
+            snode[serverCnt ++] = i;
+        }
 
 	calc_max_flow(snode, Consumer, tnode, Consumer);
 	// 需要输出的内容

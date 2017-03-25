@@ -54,7 +54,7 @@ void calc_max_flow(int* snode, int slen, int* tnode, int tlen) {
 		maxflow->connect(tnode[i], T, tneed[tnode[i]], 0);
 	for (int i = 0; i < N; i++)
 		for (unsigned int j = 0; j < edge[i].size(); j++)
-			maxflow->connect(i, j, width[i][j], cost[i][j]);
+			maxflow->connect(i, edge[i][j], width[i][j], cost[i][j]);
 
 	int ans_flow = 0, ans_cost = 0;
 	maxflow->calc_result(ans_flow, ans_cost);

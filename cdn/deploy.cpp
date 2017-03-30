@@ -1,12 +1,15 @@
 #include "deploy.h"
 #include "maxflow.h"
 
+#include <ctime>
 #include <stdio.h>
 #include <cstring>
+#include <cstdlib>
 
 using namespace std;
 
 const int maxn = 1010;
+const int INF = 214748364;
 const int INIT_ANS_LEN = 10010;
 const int MAX_FLOW = 1000000000;
 
@@ -21,6 +24,7 @@ char *ans_str;
 int ans_str_len, cur_ans_len;
 int server_price;
 int serverFlag[maxn];   // serverFlag[i] == True: build a server at node i
+int serverAns[maxn];
 
 void build_edge(int x, int y, int w, int c) {
 	edge[x].push_back(y);
@@ -45,7 +49,7 @@ void add_to_answer(char *word) {
 	ans_str_len += len;
 }
 
-void calc_max_flow(int* snode, int slen, int* tnode, int tlen) {
+int calc_max_flow(int* snode, int slen, int* tnode, int tlen, bool findRouteFlag) {
 	int S = N, T = N + 1;
 	MaxFlow *maxflow = new MaxFlow(N + 2, N, N + 1);
 	for (int i = 0; i < slen; i++) 
@@ -57,7 +61,13 @@ void calc_max_flow(int* snode, int slen, int* tnode, int tlen) {
 			maxflow->connect(i, edge[i][j], width[i][j], cost[i][j]);
 
 	int ans_flow = 0, ans_cost = 0;
+    int tot_cost = 0;
 	maxflow->calc_result(ans_flow, ans_cost);
+    if (ans_flow < tot_consumes)
+        return INF;
+    tot_cost = ans_cost + slen * server_price;
+    if (!findRouteFlag)
+        return tot_cost;
 	maxflow->find_route();
 
 	ans_str = new char[INIT_ANS_LEN];
@@ -79,24 +89,22 @@ void calc_max_flow(int* snode, int slen, int* tnode, int tlen) {
 		sprintf(end, "%d %d\n", _cons[route[route_len - 1]], route[0]);
 		add_to_answer(end);
     }
-
+    return tot_cost;
 }
 
 void selectServer()
 {
+    srand(time(0));
     memset(serverFlag, false, sizeof(serverFlag));
-    for (int i = 0; i < Consumer; i ++) {
-        int x_t = cons[i], len_t;
-        int flowCnt_t = 0, costMax_t = 0;
-        len_t = width[x_t].size();
-        for (int j = 0; j < len_t; j ++) {
-            flowCnt_t += width[x_t].at(j);
-            if (costMax_t < cost[x_t].at(j))
-                costMax_t = cost[x_t].at(j);
+    int serverNum_t = Consumer;
+    serverNum_t -= rand() % MAX(Consumer, 5);
+
+    for (int i = 0; i < serverNum_t; i ++) {
+        int tmp = rand() % N;
+        while (serverFlag[tmp]) {
+            tmp = rand() % N;
         }
-        if (flowCnt_t < tneed[x_t] || tneed[x_t] * costMax_t > server_price) {
-            serverFlag[x_t] = true;
-        }
+        serverFlag[tmp] = true;
     }
 }
 
@@ -122,20 +130,32 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		tot_consumes += w;
 	}
 
-    selectServer();
-    int serverCnt = 0;
-
     for (int i = 0; i < Consumer; i++) {
         tnode[i] = cons[i];
       //  snode[i] = cons[i];
-	}
+    }
 
+    int maxResult = INF;
+    for (int o = 0; o < 30; o ++) {
+        selectServer();
+        int serverCnt = 0;
+        for (int i = 0; i < N; i ++)
+            if (serverFlag[i]) {
+                snode[serverCnt ++] = i;
+            }
+        int flowResult = calc_max_flow(snode, serverCnt, tnode, Consumer, false);
+        if (flowResult < maxResult) {
+            maxResult = flowResult;
+            memcpy(serverAns, serverFlag, sizeof(serverFlag));
+        }
+    }
+    int serverCnt = 0;
     for (int i = 0; i < N; i ++)
         if (serverFlag[i]) {
             snode[serverCnt ++] = i;
         }
+    calc_max_flow(snode, serverCnt, tnode, Consumer, true);
 
-    calc_max_flow(snode, serverCnt, tnode, Consumer);
 	// 需要输出的内容
 	//char * topo_file = (char *)"17\n\n0 8 0 20\n21 8 0 20\n9 11 1 13\n21 22 2 20\n23 22 2 8\n1 3 3 11\n24 3 3 17\n27 3 3 26\n24 3 3 10\n18 17 4 11\n1 19 5 26\n1 16 6 15\n15 13 7 13\n4 5 8 18\n2 25 9 15\n0 7 10 10\n23 24 11 23";
 

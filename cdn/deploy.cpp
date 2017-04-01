@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <cstdlib>
+#include <algorithm>
 
 using namespace std;
 
@@ -20,14 +21,20 @@ vector<int> cost[maxn];
 int N, Edge, Consumer, tot_consumes = 0;
 int cons[maxn], _cons[maxn], tneed_index[maxn];
 int snode[maxn], tnode[maxn], tneed[maxn];
+int cover[maxn], cover_index[maxn];
+
 char *ans_str;
 int ans_str_len, cur_ans_len;
 int server_price;
 int serverFlag[maxn];   // serverFlag[i] == True: build a server at node i
 int serverAns[maxn];
 
-bool cmp(int x, int y) {
+bool cmp_need(int x, int y) {
 	return tneed[x] > tneed[y];
+}
+
+bool cmp_cover(int x, int y) {
+	return cover[x] > cover[y];
 }
 
 void build_edge(int x, int y, int w, int c) {
@@ -99,12 +106,15 @@ int calc_max_flow(int* snode, int slen, int* tnode, int tlen, bool findRouteFlag
 int selectServer(int kth)
 {
     int minCost = INF, loc = -1;
-    for (int i = 0; i < N; i++)
-    	if (!serverFlag[i]) {
-    		snode[kth] = i;
+    for (int i = 0; i < N; i++) {
+    	if (cover[cover_index[i]] == 0) break;
+    	if (!serverFlag[cover_index[i]]) {
+    		snode[kth] = cover_index[i];
     		int cost = calc_max_flow(snode, kth + 1, tnode, Consumer, false);
-    		if (cost < minCost) { minCost = cost; loc = i; } 
+    		if (cost < minCost) { minCost = cost; loc = cover_index[i]; } 
     	}
+    }
+    	
     if (minCost == INF) {
     	snode[kth] = tneed_index[kth];
     	serverFlag[tneed_index[kth]] = true;
@@ -119,6 +129,9 @@ int selectServer(int kth)
 //你要完成的功能总入口
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
+	time_t start_time, end_time;
+	time(&start_time);
+
 	sscanf(topo[0], "%d %d %d", &N, &Edge, &Consumer);
 	sscanf(topo[2], "%d", &server_price);
 
@@ -138,27 +151,57 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		tot_consumes += w;
 	}
 
+
 	for (int i = 0; i < N; i++)
 		tneed_index[i] = i;
-	sort(tneed_index, tneed_index + N, cmp);
-	for (int i = 0; i < N; i++)
-		printf("cons %d, need: %d\n", tneed_index[i], tneed[tneed_index[i]]);
+
+	sort(tneed_index, tneed_index + N, cmp_need);
+
     for (int i = 0; i < Consumer; i++) {
         tnode[i] = cons[i];
       //  snode[i] = cons[i];
     }
 
-    int minCost = INF;
+    int minCost = INF, start = 0;
+    
     memset(serverFlag, false, sizeof(serverFlag));
-    for (int o = 0; o < Consumer; o ++) {
+    if (Consumer > 300) 
+    	start = Consumer / 3 * 2;
+    else if (Consumer > 100)
+    	start = Consumer / 3;
+    if (Consumer > 100) {
+    	for (int i = 0; i < start; i++) {
+    		snode[i] = tneed_index[i];
+    		serverFlag[tneed_index[i]] = true;
+    	}
+    }
+
+	memset(cover, 0, sizeof(cover));
+	for (int i = start; i < Consumer; i++) {
+		int cur = tneed_index[i];
+		for (int j = 0; j < edge[cur].size(); j++)
+			cover[edge[cur][j]] ++;
+	}
+	for (int i = 0; i < N; i++) {
+		cover_index[i] = i;
+	}
+	sort(cover_index, cover_index + N, cmp_cover);
+
+    for (int o = start; o < Consumer; o ++) {
         int cost = selectServer(o);
         printf("Cost: %d\n", cost);
+
         if (cost < minCost) {
         	minCost = cost;
         	memcpy(serverAns, serverFlag, sizeof(serverFlag));
         }
         else if (cost > minCost) break;
+
+        time(&end_time);
+        double cost_time = difftime(end_time, start_time);
+        if (cost_time > 75) break;
     }
+
     int serverCnt = 0;
     for (int i = 0; i < N; i ++)
         if (serverAns[i]) {

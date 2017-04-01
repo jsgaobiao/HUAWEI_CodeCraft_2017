@@ -41,10 +41,6 @@ void build_edge(int x, int y, int w, int c) {
 	edge[x].push_back(y);
 	width[x].push_back(w);
 	cost[x].push_back(c);
-
-	edge[y].push_back(x);
-	width[y].push_back(w);
-	cost[y].push_back(c);	
 }
 
 void add_to_answer(char *word) {
@@ -166,7 +162,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
     
     memset(serverFlag, false, sizeof(serverFlag));
     if (Consumer > 300) 
-    	start = Consumer / 3 * 2;
+    	start = Consumer / 2;
     else if (Consumer > 100)
     	start = Consumer / 3;
     if (Consumer > 100) {

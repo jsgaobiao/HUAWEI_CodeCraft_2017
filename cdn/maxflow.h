@@ -172,6 +172,7 @@ private:
 				flow[y][j] -= ret;
 				rest -= ret;
 				used += ret;
+				if (rest == 0) break;
 			}
 		return used;
 

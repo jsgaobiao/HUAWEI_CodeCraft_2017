@@ -44,7 +44,6 @@
          <Option type="1" />
          <Option compiler="gcc" />
          <Compiler>
-            <Add option="-D_DEBUG" />
             <Add directory="/home/gaobiao/Documents/HUAWEI_CodeCraft_2017/cdn/lib" />
             <Add directory="/usr/include" />
             <Add directory="/usr/include/c++/5" />
@@ -69,7 +68,6 @@
          <Option type="1" />
          <Option compiler="gcc" />
          <Compiler>
-            <Add option="-D_DEBUG" />
             <Add directory="/home/gaobiao/Documents/HUAWEI_CodeCraft_2017/cdn/lib" />
             <Add directory="/usr/include" />
             <Add directory="/usr/include/c++/5" />

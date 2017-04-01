@@ -29,6 +29,8 @@ cstring
 -
 cstdlib
 -
+algorithm
+-
 
 /home/gaobiao/Documents/HUAWEI_CodeCraft_2017/cdn/deploy.h
 lib_io.h
@@ -66,5 +68,7 @@ maxflow.h
 cstring
 -
 queue
+-
+cstdio
 -
 

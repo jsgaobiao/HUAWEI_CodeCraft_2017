@@ -208,7 +208,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
         time(&end_time);
         double cost_time = difftime(end_time, start_time);
-        if (cost_time > 75) break;
+        if (cost_time > 50) break;
     }
 
     int serverCnt = 0;

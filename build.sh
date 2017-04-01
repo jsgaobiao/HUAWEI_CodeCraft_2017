@@ -37,7 +37,7 @@ rm -f CMakeLists.txt
 rm -f cdn.cpp
 rm -f io.cpp
 cd ..
-tar -zcPf cdn.tar.gz *
+#tar -zcPf cdn.tar.gz *
 cp cdn.tar.gz ../
 rm -f cdn.tar.gz
 cd ..

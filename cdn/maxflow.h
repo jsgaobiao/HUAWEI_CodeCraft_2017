@@ -20,6 +20,7 @@ public:
 			edge[i].clear();
 			flow[i].clear();
 			cost[i].clear();
+			oppo[i].clear();
 			edge_forward[i].clear();
 			edge_backward[i].clear();
 		}
@@ -53,7 +54,9 @@ public:
 	void find_route() {
 		route_cnt = 0;
 		stack[0] = S;
- 		DFS(S, 1, 100000000);
+		memset(use, 0, sizeof(use));
+ 		use[S] = true;
+		DFS(S, 1, 100000000);
 	}
 
 	int get_route_cnt() {
@@ -145,6 +148,7 @@ private:
 
 	int DFS(int x, int len, int rest) {
 		if (x == T) {
+			if (rest == 0) return rest;
 			int *route = new int[len];
 			for (int i = 0; i < len - 1; i++) 
 				route[i] = stack[i];
@@ -159,8 +163,11 @@ private:
 				int y = edge_forward[x][i];
 				int j = edge_backward[x][i];
 				if (flow[y][j] == 0) continue;
+				if (use[y]) continue;
 				stack[len] = y;
+				use[y] = true;
 				int ret = DFS(y, len + 1, miner(rest, flow[y][j])); 
+				use[y] = false;
 				flow[x][i] += ret;
 				flow[y][j] -= ret;
 				rest -= ret;

@@ -97,7 +97,7 @@ void selectServer()
     srand(time(0));
     memset(serverFlag, false, sizeof(serverFlag));
     int serverNum_t = Consumer;
-    serverNum_t -= rand() % MAX(Consumer, 5);
+    serverNum_t -= rand() % MAX(Consumer, 3);
 
     for (int i = 0; i < serverNum_t; i ++) {
         int tmp = rand() % N;

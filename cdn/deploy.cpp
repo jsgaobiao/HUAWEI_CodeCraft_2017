@@ -10,7 +10,7 @@
 using namespace std;
 
 const int maxn = 1010;
-const int INF = 214748364;
+const int INF = 2147483647;
 const int INIT_ANS_LEN = 10010;
 const int MAX_FLOW = 1000000000;
 
@@ -45,15 +45,17 @@ void build_edge(int x, int y, int w, int c) {
 
 void add_to_answer(char *word) {
 	int len = strlen(word);
-	if (ans_str_len + len > cur_ans_len) {
+	if (ans_str_len + len >= cur_ans_len) {
 		cur_ans_len *= 2;
 		char *tmp = new char[cur_ans_len];
 		memcpy(tmp, ans_str, sizeof(char) * ans_str_len);
 		delete ans_str;
 		ans_str = tmp;
+		ans_str[ans_str_len] = '\0';
 	}
 	strcat(ans_str, word);
 	ans_str_len += len;
+	ans_str[ans_str_len] = '\0';
 }
 
 int calc_max_flow(int* snode, int slen, int* tnode, int tlen, bool findRouteFlag) {
@@ -75,6 +77,7 @@ int calc_max_flow(int* snode, int slen, int* tnode, int tlen, bool findRouteFlag
     tot_cost = ans_cost + slen * server_price;
     if (!findRouteFlag)
         return tot_cost;
+    printf("ans_flow=%d/%d, ans_cost=%d\n", ans_flow, tot_consumes, ans_cost);
 	maxflow->find_route();
 
 	ans_str = new char[INIT_ANS_LEN];
@@ -82,20 +85,24 @@ int calc_max_flow(int* snode, int slen, int* tnode, int tlen, bool findRouteFlag
 
 	int route_cnt = maxflow->get_route_cnt();
 	sprintf(ans_str, "%d\n\n", route_cnt);
-
+	int find_flow = 0;
 	for (int i = 0; i < route_cnt; i++) {
 		int *route = NULL;
 		int route_len = 0;
 		maxflow->get_route(i, route, route_len);
 		for (int j = 1; j < route_len; j++) {
 			char num[10];
+			memset(num, 0, sizeof(num));
 			sprintf(num, "%d ", route[j]);
 			add_to_answer(num);
 		}
 		char end[10];
+		memset(end, 0, sizeof(end));
 		sprintf(end, "%d %d\n", _cons[route[route_len - 1]], route[0]);
 		add_to_answer(end);
+		find_flow += route[0];
     }
+    printf("find_flow=%d\n", find_flow);
     return tot_cost;
 }
 

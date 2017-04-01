@@ -40,7 +40,7 @@ public:
 		oppo[y].push_back(edge[x].size() - 1);
 
 		edge_forward[x].push_back(y);
-		edge_backward[x].push_back(edge[y].size() - 1);
+		edge_backward[x].push_back(flow[y].size() - 1);
 	}
 
 	void calc_result(int &ans_f, int &ans_c) {
@@ -54,9 +54,22 @@ public:
 	void find_route() {
 		route_cnt = 0;
 		stack[0] = S;
+		memset(flowed, 0, sizeof(flowed));
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < edge_forward[i].size(); j++) {
+				int y = edge_forward[i][j];
+				int k = edge_backward[i][j];
+				if (flow[y][k] > 0) {
+					flowed[i][y] += flow[y][k];
+					flowed[y][i] -= flow[y][k];
+				}
+			}
 		memset(use, 0, sizeof(use));
  		use[S] = true;
-		DFS(S, 1, 100000000);
+		int rest = DFS(S, 1, ans_flow);
+		if (rest != ans_flow) {
+			printf("flow wrong!\n");
+		}
 	}
 
 	int get_route_cnt() {
@@ -87,6 +100,7 @@ private:
 	bool use[maxn];
 	int pre[maxn];
 	int dis[maxn], frm[maxn];
+	int flowed[maxn][maxn];
 
 	int stack[maxn];
 	int *route_head[max_route_cnt];
@@ -161,15 +175,18 @@ private:
 		for (unsigned int i = 0; i < edge_forward[x].size(); i++) 
 			if (edge_forward[x][i] >= 0) {
 				int y = edge_forward[x][i];
-				int j = edge_backward[x][i];
-				if (flow[y][j] == 0) continue;
+				//int j = edge_backward[x][i];
+				if (flowed[x][y] <= 0) continue;
 				if (use[y]) continue;
 				stack[len] = y;
 				use[y] = true;
-				int ret = DFS(y, len + 1, miner(rest, flow[y][j])); 
+				int ret = DFS(y, len + 1, miner(rest, flowed[x][y])); 
+				if (ret != miner(rest, flowed[x][y])) {
+					printf("something wrong here! %d => %d\n", x, y);
+					printf("ret=%d, should be %d\n", ret, miner(rest, flowed[x][y]));
+				}
 				use[y] = false;
-				flow[x][i] += ret;
-				flow[y][j] -= ret;
+				flowed[x][y] -= ret;
 				rest -= ret;
 				used += ret;
 				if (rest == 0) break;

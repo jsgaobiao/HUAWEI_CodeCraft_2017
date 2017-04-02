@@ -28,13 +28,18 @@ int ans_str_len, cur_ans_len;
 int server_price;
 int serverFlag[maxn];   // serverFlag[i] == True: build a server at node i
 int serverAns[maxn];
+int inoutFlow[maxn], inoutFlow_index[maxn];
 
 bool cmp_need(int x, int y) {
-	return tneed[x] > tneed[y];
+    return tneed[x] > tneed[y];
 }
 
 bool cmp_cover(int x, int y) {
 	return cover[x] > cover[y];
+}
+
+bool cmp_inoutFlow(int x, int y) {
+    return inoutFlow[x] > inoutFlow[y];
 }
 
 void build_edge(int x, int y, int w, int c) {
@@ -112,25 +117,36 @@ int calc_max_flow(int* snode, int slen, int* tnode, int tlen, bool findRouteFlag
     return tot_cost;
 }
 
-int selectServer(int kth)
+int selectServer(int &kth)
 {
     int minCost = INF, loc = -1;
     for (int i = 0; i < N; i++) {
-    	if (cover[cover_index[i]] == 0) break;
-    	if (!serverFlag[cover_index[i]]) {
-    		snode[kth] = cover_index[i];
-    		int cost = calc_max_flow(snode, kth + 1, tnode, Consumer, false);
-    		if (cost < minCost) { minCost = cost; loc = cover_index[i]; } 
-    	}
+        if (cover[cover_index[i]] == 0) break;
+        if (!serverFlag[cover_index[i]]) {
+            snode[kth] = cover_index[i];
+            int cost = calc_max_flow(snode, kth + 1, tnode, Consumer, false);
+            if (cost < minCost) { minCost = cost; loc = cover_index[i]; }
+        }
     }
-    	
+
     if (minCost == INF) {
-    	snode[kth] = tneed_index[kth];
-    	serverFlag[tneed_index[kth]] = true;
+        //snode[kth] = tneed_index[kth];
+        //serverFlag[tneed_index[kth]] = true;
+        int tmp =  10;
+        for (int j = 0; j <  N; j ++) {
+            if (!serverFlag[inoutFlow_index[j]]) {
+                snode[kth] = inoutFlow_index[j];
+                serverFlag[inoutFlow_index[j]] = true;
+                kth ++;
+            }
+            tmp --;
+            if (tmp == 0) break;
+        }
+        kth --;
     }
     else {
-    	snode[kth] = loc;
-    	serverFlag[loc] = true;
+        snode[kth] = loc;
+        serverFlag[loc] = true;
     }
     return minCost;
 }
@@ -144,6 +160,8 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	sscanf(topo[0], "%d %d %d", &N, &Edge, &Consumer);
 	sscanf(topo[2], "%d", &server_price);
 
+    memset(inoutFlow, 0, sizeof(inoutFlow));
+
 	int next = 0;
 	for (int i  = 4; i < line_num; i++) {
 		int x, y, w, c;
@@ -151,6 +169,8 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		sscanf(topo[i], "%d %d %d %d", &x, &y, &w, &c);
 		build_edge(x, y, w, c);
 		build_edge(y, x, w, c);
+        inoutFlow[x] += w;
+        inoutFlow[y] += w;
 	}
 	for (int i = next; i < line_num; i++) {
 		int x, y, w;
@@ -175,9 +195,9 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
     
     memset(serverFlag, false, sizeof(serverFlag));
     if (Consumer > 300) 
-    	start = Consumer / 2;
+        start = Consumer / 2;
     else if (Consumer > 100)
-    	start = Consumer / 3;
+        start = Consumer / 3;
     if (Consumer > 100) {
     	for (int i = 0; i < start; i++) {
     		snode[i] = tneed_index[i];
@@ -196,6 +216,11 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	}
 	sort(cover_index, cover_index + N, cmp_cover);
 
+    for (int i = 0; i < N; i ++) {
+        inoutFlow_index[i] = i;
+    }
+    sort(inoutFlow_index, inoutFlow_index + N, cmp_inoutFlow);
+
     for (int o = start; o < Consumer; o ++) {
         int cost = selectServer(o);
         printf("Cost: %d\n", cost);
@@ -208,7 +233,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
         time(&end_time);
         double cost_time = difftime(end_time, start_time);
-        if (cost_time > 50) break;
+        if (cost_time > 80) break;
     }
 
     int serverCnt = 0;

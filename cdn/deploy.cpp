@@ -130,19 +130,23 @@ int selectServer(int &kth)
     }
 
     if (minCost == INF) {
-        //snode[kth] = tneed_index[kth];
-        //serverFlag[tneed_index[kth]] = true;
-        int tmp =  10;
-        for (int j = 0; j <  N; j ++) {
-            if (!serverFlag[inoutFlow_index[j]]) {
-                snode[kth] = inoutFlow_index[j];
-                serverFlag[inoutFlow_index[j]] = true;
-                kth ++;
-            }
-            tmp --;
-            if (tmp == 0) break;
+        if (N < 300) {
+            snode[kth] = tneed_index[kth];
+            serverFlag[tneed_index[kth]] = true;
         }
-        kth --;
+        else {
+            int tmp = 10;
+            for (int j = 0; j <  N; j ++) {
+                if (!serverFlag[tneed_index[j]]) {
+                    snode[kth] = tneed_index[j];
+                    serverFlag[tneed_index[j]] = true;
+                    kth ++;
+                    tmp --;
+                }
+                if (tmp == 0) break;
+            }
+            if (tmp == 0) kth --;
+        }
     }
     else {
         snode[kth] = loc;
@@ -195,7 +199,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
     
     memset(serverFlag, false, sizeof(serverFlag));
     if (Consumer > 300) 
-        start = Consumer / 2;
+        start = Consumer - 100;
     else if (Consumer > 100)
         start = Consumer / 3;
     if (Consumer > 100) {
